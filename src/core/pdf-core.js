@@ -1,5 +1,6 @@
 const puppeteer = require('puppeteer');
 const _ = require('lodash');
+const config = require('../config');
 const logger = require('../util/logger')(__filename);
 
 async function render(_opts = {}) {
@@ -7,6 +8,7 @@ async function render(_opts = {}) {
     cookies: [],
     scrollPage: false,
     emulateScreenMedia: true,
+    ignoreHttpsErrors: false,
     html: null,
     viewport: {
       width: 1600,
@@ -31,7 +33,8 @@ async function render(_opts = {}) {
   logOpts(opts);
 
   const browser = await puppeteer.launch({
-    headless: true,
+    headless: !config.HEADED,
+    ignoreHTTPSErrors: opts.ignoreHttpsErrors,
     args: ['--disable-gpu', '--no-sandbox', '--disable-setuid-sandbox'],
   });
   const page = await browser.newPage();
@@ -60,7 +63,8 @@ async function render(_opts = {}) {
 
     if (opts.html) {
       logger.info('Set HTML ..');
-      await page.setContent(opts.html);
+      // https://github.com/GoogleChrome/puppeteer/issues/728
+      await page.goto(`data:text/html,${opts.html}`, opts.goto);
     } else {
       logger.info(`Goto url ${opts.url} ..`);
       await page.goto(opts.url, opts.goto);
@@ -77,6 +81,15 @@ async function render(_opts = {}) {
     }
 
     logger.info('Render PDF ..');
+    if (config.HEADED) {
+      const msg = `\n\n---------------------------------\n
+        Chrome does not support PDF rendering in "headed" mode.
+        See this issue: https://github.com/GoogleChrome/puppeteer/issues/576
+        \n---------------------------------\n\n
+      `;
+      throw new Error(msg);
+    }
+
     data = await page.pdf(opts.pdf);
   } catch (err) {
     logger.error(`Error when rendering page: ${err}`);

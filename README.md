@@ -1,4 +1,4 @@
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/kimmobrunfeldt/url-to-pdf-api)
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/alvarcarto/url-to-pdf-api)
 
 [![Build Status](https://travis-ci.org/alvarcarto/url-to-pdf-api.svg?branch=master)](https://travis-ci.org/alvarcarto/url-to-pdf-api)
 
@@ -8,9 +8,9 @@
 
 ![Logo](docs/logo.png)
 
-**WARNING:** *Don't serve this API publicly in the internet unless you are aware of the
-risks. It allows API users to run any JavaScript code inside a Chrome in the server.
-It's fairly easy to expose content of files in the server. You have been warned!*
+**WARNING:** *Don't serve this API publicly to the internet unless you are aware of the
+risks. It allows API users to run any JavaScript code inside a Chrome session on the server.
+It's fairly easy to expose the contents of files on the server. You have been warned!*
 
 **⭐️ Features:**
 
@@ -111,7 +111,7 @@ is really simple, check it out. Render flow:
 3. Render url **or** html.
 
     If `url` is defined, **`page.goto(url, options)`** is called and options match `goto.*`.
-    Otherwise **`page.setContent(html)`** is called where html is taken from request body.
+    Otherwise **`page.goto(\\`data:text/html,${html}\\`, options)`** is called where html is taken from request body. This workaround was found from [Puppeteer issue](https://github.com/GoogleChrome/puppeteer/issues/728).
 
 4. *Possibly* **`page.waitFor(numOrStr)`** if e.g. `waitFor=1000` is set.
 5. *Possibly* **Scroll the whole page** to the end before rendering if e.g. `scrollPage=true` is set.
@@ -134,8 +134,9 @@ The only required parameter is `url`.
 Parameter | Type | Default | Description
 ----------|------|---------|------------
 url | string | - | URL to render as PDF. (required)
-scrollPage | boolean | `false` | Scroll page down before rendering to trigger lazy loading elements.
 emulateScreenMedia | boolean | `true` | Emulates `@media screen` when rendering the PDF.
+ignoreHttpsErrors | boolean | `false` | Ignores possible HTTPS errors when navigating to a page.
+scrollPage | boolean | `false` | Scroll page down before rendering to trigger lazy loading elements.
 waitFor | number or string | - | Number in ms to wait before render or selector element to wait before render.
 viewport.width | number | `1600` | Viewport width.
 viewport.height | number | `1200` | Viewport height.
@@ -198,6 +199,9 @@ The only required parameter is `url`.
 
   // If we should emulate @media screen instead of print
   emulateScreenMedia: true,
+
+  // If we should ignore HTTPS errors
+  ignoreHttpsErrors: false,
 
   // If true, page is scrolled to the end before rendering
   // Note: this makes rendering a bit slower
